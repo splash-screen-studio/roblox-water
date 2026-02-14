@@ -12,7 +12,7 @@ local Types = require(ReplicatedStorage.Shared.Types)
 
 local WaterBodies: { Types.WaterBodyDef } = {
 	-- Example: a pond near the center of the map
-	{ type = "pond", centerX = 200, centerZ = 200, depth = 16 },
+	{ type = "pond", centerX = 200, centerZ = 200 },
 }
 
 return WaterBodies
