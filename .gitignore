@@ -1,7 +1,5 @@
-# Project place file
-/roblox-water.rbxlx
+.env
 
-# Roblox Studio lock files
 /*.rbxlx.lock
 /*.rbxl.lock
 
