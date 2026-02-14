@@ -116,20 +116,21 @@ local function onHeartbeat(_dt: number)
 		local moveDir = humanoid.MoveDirection
 		local swimVelocity = moveDir * Config.WATER.SWIM_SPEED
 
-		-- Buoyancy: push upward when below the water surface
-		local buoyancy = Vector3.new(0, Config.WATER.BUOYANCY_FORCE, 0)
-
-		-- If player is near the surface of the water, reduce buoyancy
+		-- Buoyancy proportional to depth below surface: gentle at surface, stronger when deep
+		local buoyancyY = 0
 		if currentWaterPart then
 			local waterTop = currentWaterPart.Position.Y + currentWaterPart.Size.Y / 2
-			local playerY = rootPart.Position.Y
-			local depthBelowSurface = waterTop - playerY
-			if depthBelowSurface < 0 then
-				buoyancy = Vector3.zero
+			local depthBelowSurface = waterTop - rootPart.Position.Y
+
+			if depthBelowSurface > 0 then
+				buoyancyY = math.min(
+					depthBelowSurface * Config.WATER.BUOYANCY_DEPTH_SCALE,
+					Config.WATER.BUOYANCY_MAX_VELOCITY
+				)
 			end
 		end
 
-		bodyVelocity.Velocity = swimVelocity + buoyancy
+		bodyVelocity.Velocity = swimVelocity + Vector3.new(0, buoyancyY, 0)
 	end
 end
 
