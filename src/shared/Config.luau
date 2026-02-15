@@ -41,7 +41,7 @@ Config.MATERIAL_BANDS = {
 -- Water body system
 Config.WATER = {
 	WALL_THICKNESS_STUDS = 2,
-	SURFACE_INSET_STUDS = 0,
+	SURFACE_INSET_STUDS = 0.1,
 	REFLECTANCE = 0.15,
 	MATERIAL = Enum.Material.SmoothPlastic,
 	SHORELINE_MATERIAL = Enum.Material.Sand,
