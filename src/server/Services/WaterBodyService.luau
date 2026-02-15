@@ -193,13 +193,13 @@ function WaterBodyService.create(def: Types.WaterBodyDef): Model
 	local interiorLength = maxZ - minZ
 	local wallHeight = surfaceY - floorY
 
-	-- 1. Carve interior terrain (clear everything inside + above to prevent overhang)
-	local carveMargin = VOXEL
+	-- 1. Carve interior terrain (clear from below floor up through max height)
+	local maxTerrainY = Config.TERRAIN.BASE_Y + Config.TERRAIN.MAX_HEIGHT_STUDS + VOXEL
 	terrainService.carveRegion(
 		minX, minZ,
 		maxX, maxZ,
-		floorY - carveMargin,
-		surfaceY + carveMargin
+		floorY - VOXEL,
+		maxTerrainY
 	)
 
 	-- 2. Shape shoreline terrain flush with wall tops
