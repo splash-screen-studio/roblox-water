@@ -16,6 +16,15 @@ export type WaterBodyDef = {
 	waterTransparency: number?,
 }
 
+export type DepressionInfo = {
+	minX: number,
+	maxX: number,
+	minZ: number,
+	maxZ: number,
+	minHeight: number,
+	cellCount: number,
+}
+
 export type NoiseConfig = {
 	seed: number,
 	octaves: number,

@@ -61,7 +61,7 @@ local function resolveDefaults(def: Types.WaterBodyDef): {
 	local width = def.width or defaults.width
 	local length = def.length or defaults.length
 	local depth = def.depth or defaults.depth
-	local surfaceY = def.surfaceY or terrainService.heightAt(centerX, centerZ)
+	local surfaceY = def.surfaceY or Config.TERRAIN.SEA_LEVEL
 
 	return {
 		centerX = centerX,

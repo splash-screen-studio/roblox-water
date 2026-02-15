@@ -10,6 +10,7 @@ Config.TERRAIN = {
 	VOXEL_RESOLUTION = 4,
 	CHUNK_SIZE_VOXELS = 32,
 	BASE_Y = 0,
+	SEA_LEVEL = 20,
 }
 
 -- Fractal noise for heightmap
@@ -127,6 +128,18 @@ Config.TAGS = {
 -- Workspace folder names
 Config.FOLDERS = {
 	WATER_BODIES = "WaterBodies",
+}
+
+-- Depression detection (auto-fill terrain depressions below sea level)
+Config.DEPRESSION = {
+	MIN_DEPTH_STUDS = 2,
+	MIN_AREA_STUDS2 = 64,
+	CLASSIFICATION = {
+		{ maxArea = 200, type = "puddle" },
+		{ maxArea = 4000, type = "pond" },
+		{ maxArea = 30000, type = "lake" },
+		{ maxArea = 100000, type = "sea" },
+	},
 }
 
 -- Spawn
