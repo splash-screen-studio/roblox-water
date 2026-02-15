@@ -1,7 +1,8 @@
 --!strict
 --[[
 	DepressionScanner - Scans terrain for depressions below sea level.
-	Produces WaterBodyDef arrays for WaterBodyService to consume.
+	Produces WaterBodyDef arrays with exact cell footprints.
+	Flood-fill guarantees no two depressions share a cell → no overlap.
 	Depends on: Config, Types, TerrainService (heightAt only)
 	Does NOT know about: WaterBodyService, HUD, Swimming
 ]]
@@ -18,6 +19,12 @@ local MAP_SIZE = Config.TERRAIN.MAP_SIZE_STUDS
 local SEA_LEVEL = Config.TERRAIN.SEA_LEVEL
 local GRID_SIZE = MAP_SIZE / VOXEL
 
+type DepressionResult = {
+	cells: {{ number }},
+	minHeight: number,
+	cellCount: number,
+}
+
 --[[
 	Classifies a depression by its area (in studs²) into a water body type.
 ]]
@@ -33,19 +40,16 @@ end
 --[[
 	Flood-fills from a starting grid cell to find all connected cells below sea level.
 	Uses 4-directional adjacency. Marks visited cells in the visited grid.
-	Returns a DepressionInfo describing the connected region.
+	Returns the actual cell positions (world coordinates) and depth info.
 ]]
 local function floodFill(
 	startGx: number, startGz: number,
 	heightGrid: {{ number }},
 	visited: {{ boolean }}
-): Types.DepressionInfo
+): DepressionResult
 	local stack = { { startGx, startGz } }
+	local cells: {{ number }} = {}
 	local cellCount = 0
-	local minX = startGx
-	local maxX = startGx
-	local minZ = startGz
-	local maxZ = startGz
 	local minHeight = heightGrid[startGx][startGz]
 
 	while #stack > 0 do
@@ -65,10 +69,11 @@ local function floodFill(
 		visited[gx][gz] = true
 		cellCount += 1
 
-		if gx < minX then minX = gx end
-		if gx > maxX then maxX = gx end
-		if gz < minZ then minZ = gz end
-		if gz > maxZ then maxZ = gz end
+		-- Store world coordinates (grid-snapped)
+		local worldX = (gx - 1) * VOXEL
+		local worldZ = (gz - 1) * VOXEL
+		table.insert(cells, { worldX, worldZ })
+
 		if heightGrid[gx][gz] < minHeight then
 			minHeight = heightGrid[gx][gz]
 		end
@@ -80,10 +85,7 @@ local function floodFill(
 	end
 
 	return {
-		minX = (minX - 1) * VOXEL,
-		maxX = maxX * VOXEL,
-		minZ = (minZ - 1) * VOXEL,
-		maxZ = maxZ * VOXEL,
+		cells = cells,
 		minHeight = minHeight,
 		cellCount = cellCount,
 	}
@@ -91,7 +93,7 @@ end
 
 --[[
 	Scans the full terrain for depressions below sea level.
-	Returns a list of WaterBodyDef entries ready for WaterBodyService.
+	Returns a list of WaterBodyDef entries with exact cell footprints.
 ]]
 function DepressionScanner.scan(terrainService: any): { Types.WaterBodyDef }
 	print("[DepressionScanner] Scanning terrain for depressions below sea level...")
@@ -115,12 +117,12 @@ function DepressionScanner.scan(terrainService: any): { Types.WaterBodyDef }
 	end
 
 	-- Find all depressions via flood-fill
-	local depressions: { Types.DepressionInfo } = {}
+	local depressions: { DepressionResult } = {}
 	for gx = 1, GRID_SIZE do
 		for gz = 1, GRID_SIZE do
 			if not visited[gx][gz] and heightGrid[gx][gz] < SEA_LEVEL then
-				local info = floodFill(gx, gz, heightGrid, visited)
-				table.insert(depressions, info)
+				local result = floodFill(gx, gz, heightGrid, visited)
+				table.insert(depressions, result)
 			end
 		end
 	end
@@ -140,18 +142,25 @@ function DepressionScanner.scan(terrainService: any): { Types.WaterBodyDef }
 			continue
 		end
 
+		-- Compute true centroid from all cell positions
+		local sumX = 0
+		local sumZ = 0
+		for _, cell in dep.cells do
+			sumX += cell[1]
+			sumZ += cell[2]
+		end
+		local centroidX = sumX / dep.cellCount + VOXEL / 2
+		local centroidZ = sumZ / dep.cellCount + VOXEL / 2
+
 		local bodyType = classifyByArea(area)
-		local width = dep.maxX - dep.minX
-		local length = dep.maxZ - dep.minZ
 
 		table.insert(results, {
 			type = bodyType,
-			centerX = dep.minX + width / 2,
-			centerZ = dep.minZ + length / 2,
+			centerX = centroidX,
+			centerZ = centroidZ,
 			surfaceY = SEA_LEVEL,
-			width = width,
-			length = length,
 			depth = depth,
+			cells = dep.cells,
 		})
 	end
 

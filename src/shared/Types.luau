@@ -11,18 +11,10 @@ export type WaterBodyDef = {
 	width: number?,
 	length: number?,
 	depth: number?,
+	cells: {{ number }}?,
 	wallMaterial: Enum.Material?,
 	waterColor: Color3?,
 	waterTransparency: number?,
-}
-
-export type DepressionInfo = {
-	minX: number,
-	maxX: number,
-	minZ: number,
-	maxZ: number,
-	minHeight: number,
-	cellCount: number,
 }
 
 export type NoiseConfig = {
